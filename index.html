@@ -9,69 +9,71 @@ body{margin:0;overflow:hidden;background:#000;touch-action:none}
 .btn:active{background:rgba(255,200,0,0.4)}
 #up{bottom:160px;left:50%;transform:translateX(-50%)}#down{bottom:80px;left:50%;transform:translateX(-50%)}
 #left{bottom:80px;left:15%}#right{bottom:80px;right:15%}
+#restart{display:none;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);padding:20px 40px;font-size:24px;background:#ff0000;color:#fff;border:none;border-radius:10px;z-index:10}
 </style>
 <script type="importmap">{"imports":{"three":"https://unpkg.com/three@0.160.0/build/three.module.js"}}</script>
 </head>
 <body>
-<div id="info">سمعت صوت فالضلام...</div>
+<div id="info">هرب من الوحش!</div>
 <button class="btn" id="up">▲</button><button class="btn" id="left">◀</button>
 <button class="btn" id="down">▼</button><button class="btn" id="right">▶</button>
+<button id="restart">إعادة اللعب</button>
 <script type="module">
 import * as THREE from 'three';
-const scene=new THREE.Scene();scene.background=new THREE.Color(0x2a2200);scene.fog=new THREE.Fog(0x2a2200,10,30); // ضباب بعيد شوية
-const camera=new THREE.PerspectiveCamera(75,innerWidth/innerHeight,0.1,1000);
-const renderer=new THREE.WebGLRenderer({antialias:true});renderer.setSize(innerWidth,innerHeight);document.body.appendChild(renderer.domElement);
-
-// **زدنا الضو**
-scene.add(new THREE.AmbientLight(0x665500,0.8)); // ضو عام خفيف
-const light=new THREE.PointLight(0xffdd44,3,30);light.position.set(0,4,0);scene.add(light); // نيون صفراء
-const light2=new THREE.PointLight(0xffdd44,2,20);light2.position.set(0,4,25);scene.add(light2); // نيون ثانية فالممر 2
-
-// الأرضية
-const floor=new THREE.Mesh(new THREE.PlaneGeometry(200,200),new THREE.MeshStandardMaterial({color:0x5a4f00}));
-floor.rotation.x=-Math.PI/2;scene.add(floor);
-
-// نص بدم
-function makeTextTexture(text){
-  const canvas=document.createElement('canvas'); const ctx=canvas.getContext('2d');
-  canvas.width=1024; canvas.height=256;
-  ctx.fillStyle='#4a3f00'; ctx.fillRect(0,0,1024,256);
-  ctx.fillStyle='#cc0000'; ctx.font='bold 100px Arial'; ctx.textAlign='center'; ctx.fillText(text,512,150);
-  for(let i=0;i<12;i++){ctx.beginPath();ctx.arc(Math.random()*1024,Math.random()*256,Math.random()*20,0,Math.PI*2);ctx.fill();}
-  return new THREE.CanvasTexture(canvas);
-}
-const textTex = makeTextTexture('souhail alaoui');
-const textMat = new THREE.MeshStandardMaterial({map: textTex});
-
-// الأروقة ضيقة
+let scene,camera,renderer,monster,gameOver=false;
+let yaw=0,pitch=0;
 const walls=[];
-function addWall(x,z,w,h){
-  const m=new THREE.Mesh(new THREE.BoxGeometry(w,4,h),textMat);
-  m.position.set(x,2,z);scene.add(m);walls.push(m);
+
+function initGame(){
+  // مسح اللعبة القديمة
+  document.body.querySelectorAll('canvas').forEach(c=>c.remove());
+  gameOver=false;
+  document.getElementById('restart').style.display='none';
+  document.getElementById('info').innerText='هرب من الوحش!';
+
+  scene=new THREE.Scene();scene.background=new THREE.Color(0x2a2200);scene.fog=new THREE.Fog(0x2a2200,10,30);
+  camera=new THREE.PerspectiveCamera(75,innerWidth/innerHeight,0.1,1000);
+  renderer=new THREE.WebGLRenderer({antialias:true});renderer.setSize(innerWidth,innerHeight);document.body.appendChild(renderer.domElement);
+
+  scene.add(new THREE.AmbientLight(0x665500,0.8));
+  const light=new THREE.PointLight(0xffdd44,3,30);light.position.set(0,4,0);scene.add(light);
+  const light2=new THREE.PointLight(0xffdd44,2,20);light2.position.set(0,4,25);scene.add(light2);
+
+  const floor=new THREE.Mesh(new THREE.PlaneGeometry(200,200),new THREE.MeshStandardMaterial({color:0x5a4f00}));
+  floor.rotation.x=-Math.PI/2;scene.add(floor);
+
+  function makeTextTexture(text){
+    const canvas=document.createElement('canvas'); const ctx=canvas.getContext('2d');
+    canvas.width=1024; canvas.height=256;
+    ctx.fillStyle='#4a3f00'; ctx.fillRect(0,0,1024,256);
+    ctx.fillStyle='#cc0000'; ctx.font='bold 100px Arial'; ctx.textAlign='center'; ctx.fillText(text,512,150);
+    for(let i=0;i<12;i++){ctx.beginPath();ctx.arc(Math.random()*1024,Math.random()*256,Math.random()*20,0,Math.PI*2);ctx.fill();}
+    return new THREE.CanvasTexture(canvas);
+  }
+  const textTex = makeTextTexture('souhail alaoui');
+  const textMat = new THREE.MeshStandardMaterial({map: textTex});
+
+  walls.length=0;
+  function addWall(x,z,w,h){
+    const m=new THREE.Mesh(new THREE.BoxGeometry(w,4,h),textMat);
+    m.position.set(x,2,z);scene.add(m);walls.push(m);
+  }
+  addWall(0,-10,8,1); addWall(-4,0,1,20); addWall(4,0,1,20);
+  addWall(0,10,6,1); addWall(0,10,1,1);
+  addWall(0,20,8,1); addWall(-4,20,1,10); addWall(4,20,1,10); addWall(0,30,8,1);
+
+  monster=new THREE.Mesh(
+    new THREE.SphereGeometry(1.5,16,16),
+    new THREE.MeshStandardMaterial({color:0x110000, emissive:0xff0000, emissiveIntensity:1.5})
+  );
+  monster.position.set(0,1,18);
+  scene.add(monster);
+  const monsterLight = new THREE.PointLight(0xff0000,4,12); monster.add(monsterLight);
+
+  camera.position.set(0,1.6,0);
+  yaw=0; pitch=0;
+  animate();
 }
-
-addWall(0,-10,8,1);
-addWall(-4,0,1,20);
-addWall(4,0,1,20);
-addWall(0,10,6,1);
-addWall(0,10,1,1);
-
-addWall(0,20,8,1);
-addWall(-4,20,1,10);
-addWall(4,20,1,10);
-addWall(0,30,8,1);
-
-// **الوحش كيبان من بعيد**
-const monster=new THREE.Mesh(
-  new THREE.SphereGeometry(1.5,16,16),
-  new THREE.MeshStandardMaterial({color:0x110000, emissive:0xff0000, emissiveIntensity:1.5}) // كيضو حمر
-);
-monster.position.set(0,1,18);
-scene.add(monster);
-const monsterLight = new THREE.PointLight(0xff0000,4,12); monster.add(monsterLight); // ضو حمراء كتفضحو
-
-camera.position.set(0,1.6,0);
-let yaw=0, pitch=0;
 
 let move={up:0,down:0,left:0,right:0};
 ['up','down','left','right'].forEach(k=>{
@@ -83,7 +85,7 @@ let move={up:0,down:0,left:0,right:0};
 
 let isDragging=false, lastX=0, lastY=0;
 document.addEventListener('touchstart',e=>{
-  if(e.touches.length===1 &&!e.target.classList.contains('btn')){
+  if(e.touches.length===1 &&!e.target.classList.contains('btn') &&!e.target.id==='restart'){
     isDragging=true; lastX=e.touches[0].clientX; lastY=e.touches[0].clientY;
   }
 });
@@ -97,7 +99,8 @@ document.addEventListener('touchmove',e=>{
 });
 document.addEventListener('touchend',()=>{isDragging=false});
 
-let gameOver=false;
+document.getElementById('restart').onclick=()=>{initGame()};
+
 function animate(){
   if(gameOver) return;
   requestAnimationFrame(animate);
@@ -114,18 +117,22 @@ function animate(){
   let collision=false; walls.forEach(w=>{if(new THREE.Box3().setFromObject(w).containsPoint(newPos))collision=true;});
   if(!collision)camera.position.copy(newPos);
 
+  // **نقصنا سرعة الوحش من 0.11 لـ 0.08**
   const dir = camera.position.clone().sub(monster.position).normalize();
-  monster.position.addScaledVector(dir, 0.11);
+  monster.position.addScaledVector(dir, 0.08); // دابا انت أسرع منو بشوية
   monster.lookAt(camera.position);
 
   if(monster.position.distanceTo(camera.position)<2.2){
     document.getElementById('info').innerText='الوحش مسك!!';
+    document.getElementById('restart').style.display='block';
     gameOver=true;
   }
 
   camera.rotation.set(pitch, yaw, 0, 'YXZ');
   renderer.render(scene,camera);
-}animate();
+}
+
+initGame(); // بدا اللعبة
 </script>
 </body>
 </html>
