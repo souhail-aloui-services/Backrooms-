@@ -1,78 +1,78 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
-<head><meta charset="UTF-8"><title>Backrooms Claustrophobia</title>
+<head><meta charset="UTF-8"><title>Backrooms Horror</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <style>
 body{margin:0;overflow:hidden;background:#000;touch-action:none}
-#info{position:absolute;top:10px;width:100%;text-align:center;color:#ff0000;font-family:Arial;font-size:16px;text-shadow:0 0 8px #ff0000}
-.btn{position:absolute;bottom:80px;width:70px;height:70px;font-size:30px;background:rgba(255,0,0,0.2);border:2px solid #ff0000;border-radius:15px;color:white;touch-action:none}
-.btn:active{background:rgba(255,0,0,0.5)}
+#info{position:absolute;top:10px;width:100%;text-align:center;color:#ffdd88;font-family:Arial;font-size:16px;text-shadow:0 0 5px #000}
+.btn{position:absolute;bottom:80px;width:70px;height:70px;font-size:30px;background:rgba(255,200,0,0.15);border:2px solid #ffcc00;border-radius:15px;color:white;touch-action:none}
+.btn:active{background:rgba(255,200,0,0.4)}
 #up{bottom:160px;left:50%;transform:translateX(-50%)}#down{bottom:80px;left:50%;transform:translateX(-50%)}
 #left{bottom:80px;left:15%}#right{bottom:80px;right:15%}
 </style>
 <script type="importmap">{"imports":{"three":"https://unpkg.com/three@0.160.0/build/three.module.js"}}</script>
 </head>
 <body>
-<div id="info">الأروقة ضيقة... الوحش قريب</div>
+<div id="info">سمعت صوت فالضلام...</div>
 <button class="btn" id="up">▲</button><button class="btn" id="left">◀</button>
 <button class="btn" id="down">▼</button><button class="btn" id="right">▶</button>
 <script type="module">
 import * as THREE from 'three';
-const scene=new THREE.Scene();scene.background=new THREE.Color(0x0a0800);scene.fog=new THREE.Fog(0x0a0800,3,15); // ضباب قريب بزاف
+const scene=new THREE.Scene();scene.background=new THREE.Color(0x2a2200);scene.fog=new THREE.Fog(0x2a2200,10,30); // ضباب بعيد شوية
 const camera=new THREE.PerspectiveCamera(75,innerWidth/innerHeight,0.1,1000);
 const renderer=new THREE.WebGLRenderer({antialias:true});renderer.setSize(innerWidth,innerHeight);document.body.appendChild(renderer.domElement);
-scene.add(new THREE.AmbientLight(0x331100,0.2)); // ضو ضعيف بزاف
-const light=new THREE.PointLight(0xff6600,1,12);light.position.set(0,4,0);scene.add(light);
+
+// **زدنا الضو**
+scene.add(new THREE.AmbientLight(0x665500,0.8)); // ضو عام خفيف
+const light=new THREE.PointLight(0xffdd44,3,30);light.position.set(0,4,0);scene.add(light); // نيون صفراء
+const light2=new THREE.PointLight(0xffdd44,2,20);light2.position.set(0,4,25);scene.add(light2); // نيون ثانية فالممر 2
 
 // الأرضية
-const floor=new THREE.Mesh(new THREE.PlaneGeometry(200,200),new THREE.MeshStandardMaterial({color:0x3a2f00}));
+const floor=new THREE.Mesh(new THREE.PlaneGeometry(200,200),new THREE.MeshStandardMaterial({color:0x5a4f00}));
 floor.rotation.x=-Math.PI/2;scene.add(floor);
 
 // نص بدم
 function makeTextTexture(text){
   const canvas=document.createElement('canvas'); const ctx=canvas.getContext('2d');
   canvas.width=1024; canvas.height=256;
-  ctx.fillStyle='#2a2000'; ctx.fillRect(0,0,1024,256);
-  ctx.fillStyle='#8b0000'; ctx.font='bold 100px Arial'; ctx.textAlign='center'; ctx.fillText(text,512,150);
-  for(let i=0;i<15;i++){ctx.beginPath();ctx.arc(Math.random()*1024,Math.random()*256,Math.random()*25,0,Math.PI*2);ctx.fill();}
+  ctx.fillStyle='#4a3f00'; ctx.fillRect(0,0,1024,256);
+  ctx.fillStyle='#cc0000'; ctx.font='bold 100px Arial'; ctx.textAlign='center'; ctx.fillText(text,512,150);
+  for(let i=0;i<12;i++){ctx.beginPath();ctx.arc(Math.random()*1024,Math.random()*256,Math.random()*20,0,Math.PI*2);ctx.fill();}
   return new THREE.CanvasTexture(canvas);
 }
 const textTex = makeTextTexture('souhail alaoui');
 const textMat = new THREE.MeshStandardMaterial({map: textTex});
 
-// **الأروقة ضيقة = 8 فقط ماشي 30**
+// الأروقة ضيقة
 const walls=[];
 function addWall(x,z,w,h){
-  const m=new THREE.Mesh(new THREE.BoxGeometry(w,4,h),textMat); // نقصنا الطول لـ 4
+  const m=new THREE.Mesh(new THREE.BoxGeometry(w,4,h),textMat);
   m.position.set(x,2,z);scene.add(m);walls.push(m);
 }
 
-// ممر 1: ضيق
-addWall(0,-10,8,1); // كان 30 دابا 8
+addWall(0,-10,8,1);
 addWall(-4,0,1,20);
 addWall(4,0,1,20);
 addWall(0,10,6,1);
-addWall(0,10,1,1); // باب ضيق
+addWall(0,10,1,1);
 
-// ممر 2: ضيق
 addWall(0,20,8,1);
 addWall(-4,20,1,10);
 addWall(4,20,1,10);
 addWall(0,30,8,1);
 
-// **الوحش**
+// **الوحش كيبان من بعيد**
 const monster=new THREE.Mesh(
   new THREE.SphereGeometry(1.5,16,16),
-  new THREE.MeshStandardMaterial({color:0x000, emissive:0xff0000, emissiveIntensity:1}) // كيضو كثر
+  new THREE.MeshStandardMaterial({color:0x110000, emissive:0xff0000, emissiveIntensity:1.5}) // كيضو حمر
 );
-monster.position.set(0,1,15); // قريب ليك
+monster.position.set(0,1,18);
 scene.add(monster);
-const monsterLight = new THREE.PointLight(0xff0000,3,8); monster.add(monsterLight);
+const monsterLight = new THREE.PointLight(0xff0000,4,12); monster.add(monsterLight); // ضو حمراء كتفضحو
 
 camera.position.set(0,1.6,0);
 let yaw=0, pitch=0;
 
-// التحكم
 let move={up:0,down:0,left:0,right:0};
 ['up','down','left','right'].forEach(k=>{
   const btn=document.getElementById(k);
@@ -81,7 +81,6 @@ let move={up:0,down:0,left:0,right:0};
   btn.addEventListener('touchcancel',e=>{e.preventDefault();move[k]=0});
 });
 
-// الدوران سريع
 let isDragging=false, lastX=0, lastY=0;
 document.addEventListener('touchstart',e=>{
   if(e.touches.length===1 &&!e.target.classList.contains('btn')){
@@ -91,7 +90,7 @@ document.addEventListener('touchstart',e=>{
 document.addEventListener('touchmove',e=>{
   if(isDragging){
     const dx=e.touches[0].clientX-lastX; const dy=e.touches[0].clientY-lastY;
-    yaw -= dx*0.01; pitch -= dy*0.01; // زدنا السرعة شوية
+    yaw -= dx*0.01; pitch -= dy*0.01;
     pitch = Math.max(-Math.PI/2, Math.min(Math.PI/2, pitch));
     lastX=e.touches[0].clientX; lastY=e.touches[0].clientY;
   }
@@ -102,7 +101,7 @@ let gameOver=false;
 function animate(){
   if(gameOver) return;
   requestAnimationFrame(animate);
-  const speed=0.13; // نقصنا السرعة شوية حيت المكان ضيق
+  const speed=0.13;
 
   const forward = new THREE.Vector3(0,0,-1).applyAxisAngle(new THREE.Vector3(0,1,0), yaw);
   const right = new THREE.Vector3(1,0,0).applyAxisAngle(new THREE.Vector3(0,1,0), yaw);
@@ -115,13 +114,12 @@ function animate(){
   let collision=false; walls.forEach(w=>{if(new THREE.Box3().setFromObject(w).containsPoint(newPos))collision=true;});
   if(!collision)camera.position.copy(newPos);
 
-  // الوحش كيجري عليك فالممر الضيق
   const dir = camera.position.clone().sub(monster.position).normalize();
-  monster.position.addScaledVector(dir, 0.11); // الوحش أسرع منك
+  monster.position.addScaledVector(dir, 0.11);
   monster.lookAt(camera.position);
 
   if(monster.position.distanceTo(camera.position)<2.2){
-    document.getElementById('info').innerText='الوحش مسك فالممر الضيق!!';
+    document.getElementById('info').innerText='الوحش مسك!!';
     gameOver=true;
   }
 
