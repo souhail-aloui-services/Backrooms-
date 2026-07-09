@@ -2,41 +2,77 @@
 <html lang="ar" dir="rtl">
 <head><meta charset="UTF-8"><title>Backrooms 3D</title>
 <style>
-body{margin:0;overflow:hidden;background:#000}
-#info{position:absolute;top:10px;width:100%;text-align:center;color:#fff;font-family:Arial}
-.btn{position:absolute;bottom:80px;width:70px;height:70px;font-size:30px;background:rgba(255,255,255,0.2);border:2px solid #fff;border-radius:15px;color:white}
+body{margin:0;overflow:hidden;background:#000;user-select:none}
+#info{position:absolute;top:10px;width:100%;text-align:center;color:#fff;font-family:Arial;font-size:14px}
+.btn{position:absolute;bottom:80px;width:70px;height:70px;font-size:30px;background:rgba(255,255,255,0.15);border:2px solid #fff;border-radius:15px;color:white;touch-action:none}
+.btn:active{background:rgba(255,255,255,0.4)}
 #up{bottom:160px;left:50%;transform:translateX(-50%)}#down{bottom:80px;left:50%;transform:translateX(-50%)}
-#left{bottom:80px;left:20%}#right{bottom:80px;right:20%}
+#left{bottom:80px;left:15%}#right{bottom:80px;right:15%}
 </style>
 <script type="importmap">{"imports":{"three":"https://unpkg.com/three@0.160.0/build/three.module.js"}}</script>
 </head>
 <body>
-<div id="info">تحرك بالأزرار | دخل للغرفة 2</div>
+<div id="info">تحرك بالأزرار</div>
 <button class="btn" id="up">▲</button><button class="btn" id="left">◀</button>
 <button class="btn" id="down">▼</button><button class="btn" id="right">▶</button>
 <script type="module">
 import * as THREE from 'three';
 const scene=new THREE.Scene();scene.background=new THREE.Color(0xe5d69a);scene.fog=new THREE.Fog(0xe5d69a,10,40);
 const camera=new THREE.PerspectiveCamera(75,innerWidth/innerHeight,0.1,1000);
-const renderer=new THREE.WebGLRenderer();renderer.setSize(innerWidth,innerHeight);document.body.appendChild(renderer.domElement);
-scene.add(new THREE.AmbientLight(0xffffaa,0.8));
+const renderer=new THREE.WebGLRenderer({antialias:true});renderer.setSize(innerWidth,innerHeight);document.body.appendChild(renderer.domElement);
+scene.add(new THREE.AmbientLight(0xffffaa,0.9));
 const light=new THREE.PointLight(0xffffaa,2,30);light.position.set(0,4,0);scene.add(light);
+
 // الأرضية مربعات
-const tex=new THREE.TextureLoader().load('https://threejs.org/examples/textures/checker.png');
-tex.wrapS=tex.wrapT=THREE.RepeatWrapping;tex.repeat.set(20,20);
-const floor=new THREE.Mesh(new THREE.PlaneGeometry(200,200),new THREE.MeshStandardMaterial({map:tex}));
+const floorTex=new THREE.TextureLoader().load('https://threejs.org/examples/textures/checker.png');
+floorTex.wrapS=floorTex.wrapT=THREE.RepeatWrapping;floorTex.repeat.set(20,20);
+const floor=new THREE.Mesh(new THREE.PlaneGeometry(200,200),new THREE.MeshStandardMaterial({map:floorTex}));
 floor.rotation.x=-Math.PI/2;scene.add(floor);
-// جدران الغرفة 1 والغرفة 2
-const walls=[];function addWall(x,z,w,h){const m=new THREE.Mesh(new THREE.BoxGeometry(w,5,h),new THREE.MeshStandardMaterial({color:0xe5d69a}));m.position.set(x,2.5,z);scene.add(m);walls.push(m);}
-addWall(0,-15,30,1);addWall(-15,0,1,30);addWall(15,0,1,30);addWall(0,15,14,1);addWall(0,15,14,1);
-addWall(0,15,2,1); // باب
-addWall(0,35,30,1);addWall(-15,35,1,10);addWall(15,35,1,10);addWall(0,45,30,1); // غرفة 2
+
+// **هادي هي الصورة ديالك من المعرض**
+const wallTex=new THREE.TextureLoader().load('wall.jpg'); // سميتها wall.jpg
+wallTex.wrapS=wallTex.wrapT=THREE.RepeatWrapping;
+wallTex.repeat.set(1,1); // خليها 1 باش الصورة ما تتكررش
+const wallMatWithImage = new THREE.MeshStandardMaterial({map: wallTex});
+const wallMatNormal = new THREE.MeshStandardMaterial({color:0xe5d69a});
+
+// الجدران
+const walls=[];
+function addWall(x,z,w,h,useImage=false){
+  const mat = useImage? wallMatWithImage : wallMatNormal;
+  const m=new THREE.Mesh(new THREE.BoxGeometry(w,5,h),mat);
+  m.position.set(x,2.5,z);scene.add(m);walls.push(m);
+}
+
+// غرفة 1 - الحيطان اللي فيهم الصورة درت true
+addWall(0,-15,30,1,true); 
+addWall(-15,0,1,30,true); 
+addWall(15,0,1,30,true); 
+addWall(0,15,14,1,true); 
+addWall(0,15,2,1); // الباب بلا صورة
+// غرفة 2
+addWall(0,35,30,1,true); 
+addWall(-15,35,1,10); 
+addWall(15,35,1,10); 
+addWall(0,45,30,1);
+
 camera.position.set(0,1.6,0);
-let move={};['up','down','left','right'].forEach(k=>{document.getElementById(k).ontouchstart=()=>move[k]=1;document.getElementById(k).ontouchend=()=>move[k]=0;});
-function animate(){requestAnimationFrame(animate);const speed=0.15;const newPos=camera.position.clone();
+let move={up:0,down:0,left:0,right:0};
+
+// التحكم مصلح - ما غاديش يبقى لاصق
+['up','down','left','right'].forEach(k=>{
+  const btn=document.getElementById(k);
+  btn.addEventListener('touchstart',e=>{e.preventDefault();move[k]=1});
+  btn.addEventListener('touchend',e=>{e.preventDefault();move[k]=0});
+  btn.addEventListener('touchcancel',e=>{e.preventDefault();move[k]=0});
+});
+
+function animate(){requestAnimationFrame(animate);
+const speed=0.15;const newPos=camera.position.clone();
 if(move.up)newPos.z-=speed;if(move.down)newPos.z+=speed;if(move.left)newPos.x-=speed;if(move.right)newPos.x+=speed;
 let collision=false;walls.forEach(w=>{if(new THREE.Box3().setFromObject(w).containsPoint(newPos))collision=true;});
-if(!collision)camera.position.copy(newPos);renderer.render(scene,camera);}animate();
+if(!collision)camera.position.copy(newPos);
+renderer.render(scene,camera);}animate();
 </script>
 </body>
 </html>
