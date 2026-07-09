@@ -9,19 +9,49 @@ body{margin:0;overflow:hidden;background:#000;touch-action:none}
 #info{position:absolute;top:10px;width:100%;text-align:center;color:#ffdd88;font-family:Arial;font-size:18px;font-weight:bold;text-shadow:0 0 5px #000}
 #warning{display:none;position:absolute;top:35%;width:100%;text-align:center;color:#ff0000;font-size:36px;font-family:Arial;font-weight:bold;text-shadow:0 0 15px #ff0000;animation:blink 0.2s infinite}
 @keyframes blink{50%{opacity:0}}
-.btn{position:absolute;bottom:80px;width:70px;height:70px;font-size:30px;background:rgba(255,200,0,0.2);border:2px solid #ffcc00;border-radius:15px;color:white;touch-action:none;user-select:none}
+.btn{position:absolute;bottom:80px;width:70px;height:70px;font-size:30px;background:rgba(255,200,0,0.2);border:2px solid #ffcc00;border-radius:15px;color:white;touch-action:none;user-select:none;transition:0.2s}
 .btn:active{background:rgba(255,200,0,0.6)}
-#up{bottom:160px;left:50%;transform:translateX(-50%)}
-#down{bottom:80px;left:50%;transform:translateX(-50%)}
-#left{bottom:80px;left:15%}
-#right{bottom:80px;right:15%}
+#up{bottom:160px;right:15%}
+#down{bottom:80px;right:15%}
+#left{bottom:80px;right:calc(15% + 80px)}
+#right{bottom:80px;right:calc(15% - 80px)}
 #restart{display:none;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);padding:25px 50px;font-size:28px;background:#ff0000;color:#fff;border:3px solid #fff;border-radius:15px;z-index:10;cursor:pointer}
+
+/* جديد: يدين الشخصية */
+#hands {
+  position: fixed;
+  bottom: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 300px;
+  height: 200px;
+  background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 200"><path d="M80 180 Q90 120 110 100 Q120 90 130 110 L150 130 Q170 110 180 90 Q190 80 200 100 Q220 120 230 180" fill="%23d4a373" stroke="%238b5e3c" stroke-width="3"/><path d="M100 180 Q110 120 130 100 Q140 90 150 110 L170 130 Q190 110 200 90 Q210 80 220 100 Q240 120 250 180" fill="%23d4a373" stroke="%238b5e3c" stroke-width="3"/></svg>') no-repeat center;
+  background-size: contain;
+  z-index: 999;
+  pointer-events: none;
+  animation: runHands 0.3s infinite;
+}
+@keyframes runHands {
+ 0% { transform: translateX(-50%) translateY(0) rotate(-2deg); }
+ 50% { transform: translateX(-50%) translateY(-8px) rotate(2deg); }
+}
+.running #hands { display: block; }
+
+/* جديد: وضع افقي للهاتف */
+@media screen and (orientation: landscape) {
+ .btn { transform: scale(1.2); }
+  #hands { width: 400px; height: 250px; bottom: -20px; }
+}
 </style>
 <script type="importmap">{"imports":{"three":"https://unpkg.com/three@0.160.0/build/three.module.js"}}</script>
 </head>
 <body>
 <div id="info">متاهة Backrooms - هرب من الوحش!</div>
 <div id="warning">⚠️ الوحش قريب!! ⚠️</div>
+
+<!-- جديد: يدين الشخصية -->
+<div id="hands"></div>
+
 <button class="btn" id="up">▲</button>
 <button class="btn" id="left">◀</button>
 <button class="btn" id="down">▼</button>
@@ -34,6 +64,7 @@ let scene,camera,renderer,monster,gameOver=false;
 let yaw=0,pitch=0;
 const walls=[];
 let beepInterval = null;
+let isMoving = false;
 
 function playBeep(speed){
   if(beepInterval) clearInterval(beepInterval);
@@ -91,39 +122,25 @@ function initGame(){
     m.position.set(x,2.5,z);scene.add(m);walls.push(m);
   }
 
-  // **متاهة مفتوحة من الوسط**
-  // الممر الرئيسي
   addWall(0,-8,10,1); addWall(-5,0,1,30); addWall(5,0,1,30);
-
-  // تفرع يمين
   addWall(15,5,10,1); addWall(20,-5,1,20); addWall(20,15,1,20);
   addWall(10,15,10,1); addWall(10,-5,10,1);
-
-  // تفرع يسار
   addWall(-15,5,10,1); addWall(-20,-5,1,20); addWall(-20,15,1,20);
   addWall(-10,15,10,1); addWall(-10,-5,10,1);
-
-  // الممر الثاني
   addWall(0,20,10,1); addWall(-5,35,1,30); addWall(5,35,1,30);
-
-  // تفرعات الممر الثاني
   addWall(15,35,10,1); addWall(20,25,1,20); addWall(20,45,1,20);
   addWall(-15,35,10,1); addWall(-20,25,1,20); addWall(-20,45,1,20);
-
-  // النهاية
   addWall(0,55,10,1);
 
-  // **الوحش بعيد بزاف**
   monster=new THREE.Mesh(
     new THREE.SphereGeometry(1.8,16,16),
     new THREE.MeshStandardMaterial({color:0x000, emissive:0xff0000, emissiveIntensity:2})
   );
-  monster.position.set(0,1,45); // كان 30 دابا 45 باش يكون بعيد
+  monster.position.set(0,1,45);
   scene.add(monster);
   const monsterLight = new THREE.PointLight(0xff0000,5,15); monster.add(monsterLight);
 
-  // **نتا كتبدا فالوسط عندك 3 مخارج**
-  camera.position.set(0,1.7,2); // كان 0,1.7,0 دابا دخلناك 2 متر للقدام
+  camera.position.set(0,1.7,2);
   yaw=0; pitch=0;
   animate();
 }
@@ -132,9 +149,11 @@ let move={u:0,d:0,l:0,r:0};
 ['up','down','left','right'].forEach((k,i)=>{
   const btn=document.getElementById(k);
   const key=['u','d','l','r'][i];
-  btn.addEventListener('touchstart',e=>{e.preventDefault();move[key]=1});
-  btn.addEventListener('touchend',e=>{e.preventDefault();move[key]=0});
-  btn.addEventListener('touchcancel',e=>{e.preventDefault();move[key]=0});
+  const start=()=>{move[key]=1; document.body.classList.add('running'); isMoving=true;}
+  const end=()=>{move[key]=0; if(!move.u &&!move.d &&!move.l &&!move.r){document.body.classList.remove('running'); isMoving=false;}}
+  btn.addEventListener('touchstart',e=>{e.preventDefault();start()});
+  btn.addEventListener('touchend',e=>{e.preventDefault();end()});
+  btn.addEventListener('touchcancel',e=>{e.preventDefault();end()});
 });
 
 let isDragging=false, lastX=0, lastY=0;
@@ -192,6 +211,7 @@ function animate(){
     document.getElementById('restart').style.display='block';
     warning.style.display='none';
     stopBeep();
+    document.body.classList.remove('running');
     gameOver=true;
   }
 
