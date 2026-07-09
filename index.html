@@ -2,7 +2,7 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
-<title>Backrooms Maze Horror</title>
+<title>Backrooms Maze Horror v3</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <style>
 body{margin:0;overflow:hidden;background:#000;touch-action:none}
@@ -91,7 +91,7 @@ function initGame(){
     m.position.set(x,2.5,z);scene.add(m);walls.push(m);
   }
 
-  // **متاهة كبيرة - 3 طرق + تفرعات**
+  // **متاهة مفتوحة من الوسط**
   // الممر الرئيسي
   addWall(0,-8,10,1); addWall(-5,0,1,30); addWall(5,0,1,30);
 
@@ -113,16 +113,17 @@ function initGame(){
   // النهاية
   addWall(0,55,10,1);
 
-  // **الوحش**
+  // **الوحش بعيد بزاف**
   monster=new THREE.Mesh(
     new THREE.SphereGeometry(1.8,16,16),
     new THREE.MeshStandardMaterial({color:0x000, emissive:0xff0000, emissiveIntensity:2})
   );
-  monster.position.set(0,1,30); // بعيد باش يعطيك وقت
+  monster.position.set(0,1,45); // كان 30 دابا 45 باش يكون بعيد
   scene.add(monster);
   const monsterLight = new THREE.PointLight(0xff0000,5,15); monster.add(monsterLight);
 
-  camera.position.set(0,1.7,0);
+  // **نتا كتبدا فالوسط عندك 3 مخارج**
+  camera.position.set(0,1.7,2); // كان 0,1.7,0 دابا دخلناك 2 متر للقدام
   yaw=0; pitch=0;
   animate();
 }
@@ -171,19 +172,16 @@ function animate(){
   walls.forEach(w=>{if(new THREE.Box3().setFromObject(w).containsPoint(newPos))collision=true;});
   if(!collision)camera.position.copy(newPos);
 
-  // الوحش كيتبعك ولكن بطيء
   const dir = camera.position.clone().sub(monster.position).normalize();
   monster.position.addScaledVector(dir, 0.075);
   monster.lookAt(camera.position);
 
-  // **نظام التنبيه**
   const dist = monster.position.distanceTo(camera.position);
   const warning = document.getElementById('warning');
 
   if(dist < 12){
     warning.style.display='block';
-    if(dist < 6) playBeep(250); // سريع بزاف
-    else playBeep(700); // بطيء
+    if(dist < 6) playBeep(250); else playBeep(700);
   } else {
     warning.style.display='none';
     stopBeep();
