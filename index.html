@@ -1,35 +1,53 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
-<head><meta charset="UTF-8"><title>Backrooms Horror</title>
+<head><meta charset="UTF-8"><title>Backrooms Maze</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <style>
 body{margin:0;overflow:hidden;background:#000;touch-action:none}
 #info{position:absolute;top:10px;width:100%;text-align:center;color:#ffdd88;font-family:Arial;font-size:16px;text-shadow:0 0 5px #000}
+#warning{display:none;position:absolute;top:30%;width:100%;text-align:center;color:#ff0000;font-size:32px;font-weight:bold;text-shadow:0 0 10px #ff0000;animation:blink 0.3s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
 .btn{position:absolute;bottom:80px;width:70px;height:70px;font-size:30px;background:rgba(255,200,0,0.15);border:2px solid #ffcc00;border-radius:15px;color:white;touch-action:none}
 .btn:active{background:rgba(255,200,0,0.4)}
 #up{bottom:160px;left:50%;transform:translateX(-50%)}#down{bottom:80px;left:50%;transform:translateX(-50%)}
 #left{bottom:80px;left:15%}#right{bottom:80px;right:15%}
-#restart{display:none;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);padding:20px 40px;font-size:24px;background:#ff0000;color:#fff;border:none;border-radius:10px;z-index:10}
+#restart{display:none;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);padding:20px 40px;font-size:24px;background:#ff0000;color:#fff;border:none;border-radius:10px;z-index:10;cursor:pointer}
 </style>
 <script type="importmap">{"imports":{"three":"https://unpkg.com/three@0.160.0/build/three.module.js"}}</script>
 </head>
 <body>
-<div id="info">هرب من الوحش!</div>
+<div id="info">توه فالمتاهة... هرب!</div>
+<div id="warning">⚠️ الوحش قريب!! ⚠️</div>
 <button class="btn" id="up">▲</button><button class="btn" id="left">◀</button>
 <button class="btn" id="down">▼</button><button class="btn" id="right">▶</button>
-<button id="restart">إعادة اللعب</button>
+<button id="restart">🔄 إعادة التشغيل</button>
+
 <script type="module">
 import * as THREE from 'three';
 let scene,camera,renderer,monster,gameOver=false;
 let yaw=0,pitch=0;
 const walls=[];
+let beepInterval = null;
+
+function playBeep(speed){
+  if(beepInterval) clearInterval(beepInterval);
+  beepInterval = setInterval(()=>{
+    const audio = new AudioContext();
+    const osc = audio.createOscillator();
+    osc.frequency.value = 800;
+    osc.connect(audio.destination);
+    osc.start(); osc.stop(audio.currentTime + 0.1);
+  }, speed);
+}
+function stopBeep(){ if(beepInterval) clearInterval(beepInterval); beepInterval = null; }
 
 function initGame(){
-  // مسح اللعبة القديمة
   document.body.querySelectorAll('canvas').forEach(c=>c.remove());
+  stopBeep();
   gameOver=false;
   document.getElementById('restart').style.display='none';
-  document.getElementById('info').innerText='هرب من الوحش!';
+  document.getElementById('warning').style.display='none';
+  document.getElementById('info').innerText='توه فالمتاهة... هرب!';
 
   scene=new THREE.Scene();scene.background=new THREE.Color(0x2a2200);scene.fog=new THREE.Fog(0x2a2200,10,30);
   camera=new THREE.PerspectiveCamera(75,innerWidth/innerHeight,0.1,1000);
@@ -37,7 +55,8 @@ function initGame(){
 
   scene.add(new THREE.AmbientLight(0x665500,0.8));
   const light=new THREE.PointLight(0xffdd44,3,30);light.position.set(0,4,0);scene.add(light);
-  const light2=new THREE.PointLight(0xffdd44,2,20);light2.position.set(0,4,25);scene.add(light2);
+  const light2=new THREE.PointLight(0xffdd44,2,20);light2.position.set(10,4,25);scene.add(light2);
+  const light3=new THREE.PointLight(0xffdd44,2,20);light3.position.set(-10,4,45);scene.add(light3);
 
   const floor=new THREE.Mesh(new THREE.PlaneGeometry(200,200),new THREE.MeshStandardMaterial({color:0x5a4f00}));
   floor.rotation.x=-Math.PI/2;scene.add(floor);
@@ -58,15 +77,34 @@ function initGame(){
     const m=new THREE.Mesh(new THREE.BoxGeometry(w,4,h),textMat);
     m.position.set(x,2,z);scene.add(m);walls.push(m);
   }
+
+  // **متاهة كبيرة فيها ممرات بزاف للهروب**
+  // الممر الرئيسي
   addWall(0,-10,8,1); addWall(-4,0,1,20); addWall(4,0,1,20);
-  addWall(0,10,6,1); addWall(0,10,1,1);
-  addWall(0,20,8,1); addWall(-4,20,1,10); addWall(4,20,1,10); addWall(0,30,8,1);
+
+  // تفرع يمين
+  addWall(12,0,8,1); addWall(16,-10,1,20); addWall(16,10,1,20);
+  addWall(8,10,8,1); addWall(8,-10,8,1);
+
+  // تفرع يسار
+  addWall(-12,0,8,1); addWall(-16,-10,1,20); addWall(-16,10,1,20);
+  addWall(-8,10,8,1); addWall(-8,-10,8,1);
+
+  // الممر الثاني
+  addWall(0,20,8,1); addWall(-4,30,1,20); addWall(4,30,1,20);
+
+  // تفرع ثاني
+  addWall(12,30,8,1); addWall(16,20,1,20); addWall(16,40,1,20);
+  addWall(-12,30,8,1); addWall(-16,20,1,20); addWall(-16,40,1,20);
+
+  // النهاية
+  addWall(0,50,8,1);
 
   monster=new THREE.Mesh(
     new THREE.SphereGeometry(1.5,16,16),
     new THREE.MeshStandardMaterial({color:0x110000, emissive:0xff0000, emissiveIntensity:1.5})
   );
-  monster.position.set(0,1,18);
+  monster.position.set(0,1,25); // بعيد شوية فالمتاهة
   scene.add(monster);
   const monsterLight = new THREE.PointLight(0xff0000,4,12); monster.add(monsterLight);
 
@@ -85,7 +123,7 @@ let move={up:0,down:0,left:0,right:0};
 
 let isDragging=false, lastX=0, lastY=0;
 document.addEventListener('touchstart',e=>{
-  if(e.touches.length===1 &&!e.target.classList.contains('btn') &&!e.target.id==='restart'){
+  if(e.touches.length===1 &&!e.target.classList.contains('btn') &&e.target.id!=='restart'){
     isDragging=true; lastX=e.touches[0].clientX; lastY=e.touches[0].clientY;
   }
 });
@@ -117,14 +155,26 @@ function animate(){
   let collision=false; walls.forEach(w=>{if(new THREE.Box3().setFromObject(w).containsPoint(newPos))collision=true;});
   if(!collision)camera.position.copy(newPos);
 
-  // **نقصنا سرعة الوحش من 0.11 لـ 0.08**
   const dir = camera.position.clone().sub(monster.position).normalize();
-  monster.position.addScaledVector(dir, 0.08); // دابا انت أسرع منو بشوية
+  monster.position.addScaledVector(dir, 0.08);
   monster.lookAt(camera.position);
 
-  if(monster.position.distanceTo(camera.position)<2.2){
+  const dist = monster.position.distanceTo(camera.position);
+  const warning = document.getElementById('warning');
+
+  if(dist < 10){
+    warning.style.display='block';
+    if(dist < 5) playBeep(300); else playBeep(800);
+  } else {
+    warning.style.display='none';
+    stopBeep();
+  }
+
+  if(dist<2.2){
     document.getElementById('info').innerText='الوحش مسك!!';
     document.getElementById('restart').style.display='block';
+    warning.style.display='none';
+    stopBeep();
     gameOver=true;
   }
 
@@ -132,7 +182,7 @@ function animate(){
   renderer.render(scene,camera);
 }
 
-initGame(); // بدا اللعبة
+initGame();
 </script>
 </body>
 </html>
