@@ -2,57 +2,53 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
-<title>Backrooms Maze Horror v4</title>
+<title>Backrooms Level 0</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <style>
-body{margin:0;overflow:hidden;background:#000;touch-action:none}
-#info{position:absolute;top:10px;width:100%;text-align:center;color:#ffdd88;font-family:Arial;font-size:18px;font-weight:bold;text-shadow:0 0 5px #000}
+body{margin:0;overflow:hidden;background:#000;touch-action:none;filter: contrast(1.1) brightness(0.9)}
+#info{position:absolute;top:10px;width:100%;text-align:center;color:#ffffaa;font-family:Arial;font-size:18px;font-weight:bold;text-shadow:0 0 5px #000}
 #warning{display:none;position:absolute;top:35%;width:100%;text-align:center;color:#ff0000;font-size:36px;font-family:Arial;font-weight:bold;text-shadow:0 0 15px #ff0000;animation:blink 0.2s infinite}
 @keyframes blink{50%{opacity:0}}
-.btn{position:absolute;bottom:40px;width:70px;height:70px;font-size:30px;background:rgba(255,50,50,0.3);border:2px solid #ff0000;border-radius:15px;color:white;touch-action:none;user-select:none;transition:0.2s;box-shadow:0 0 10px rgba(255,0,0,0.5)}
-.btn:active{background:rgba(255,0,0,0.7);transform:scale(0.9)}
+.btn{position:absolute;bottom:40px;width:70px;height:70px;font-size:30px;background:rgba(255,255,0,0.15);border:2px solid #ffff00;border-radius:15px;color:white;touch-action:none;user-select:none}
+.btn:active{background:rgba(255,255,0,0.4)}
 #up{bottom:120px;left:15%}
 #down{bottom:40px;left:15%}
 #left{bottom:40px;left:calc(15% - 80px)}
 #right{bottom:40px;left:calc(15% + 80px)}
 #restart{display:none;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);padding:25px 50px;font-size:28px;background:#ff0000;color:#fff;border:3px solid #fff;border-radius:15px;z-index:10;cursor:pointer}
 
-/* جديد: الشخصية كاملة */
-#player-body {
+/* الشخصية 3D من الجنب بحال الصورة */
+#player-model {
   position: fixed;
   bottom: 0;
   left: 50%;
   transform: translateX(-50%);
-  width: 350px;
-  height: 500px;
-  background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 350 500"><circle cx="175" cy="60" r="40" fill="%23e0b48d"/><path d="M155 90 L195 90 L190 200 L160 200 Z" fill="%23333"/><path d="M160 200 L140 350 L155 350 L170 220 Z" fill="%23111"/><path d="M190 200 L210 350 L195 350 L180 220 Z" fill="%23111"/><path d="M155 95 Q140 130 120 160 Q110 170 115 180 L130 175" fill="%23e0b48d"/><path d="M195 95 Q210 130 230 160 Q240 170 235 180 L220 175" fill="%23e0b48d"/></svg>') no-repeat center;
+  width: 200px;
+  height: 400px;
+  background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 400"><rect x="80" y="50" width="40" height="40" fill="%23fdbcb4"/><rect x="70" y="90" width="60" height="80" fill="%23ffffff"/><rect x="75" y="170" width="20" height="100" fill="%23222"/><rect x="105" y="170" width="20" height="100" fill="%23222"/><rect x="60" y="95" width="15" height="60" fill="%23ffffff"/><rect x="125" y="95" width="15" height="60" fill="%23ffffff"/></svg>') no-repeat center;
   background-size: contain;
   z-index: 999;
   pointer-events: none;
-  opacity: 0.85;
-  filter: drop-shadow(0 0 10px rgba(0,0,0,0.8));
-  transition: transform 0.1s;
+  image-rendering: pixelated; /* ستايل بكسل بحال الصورة */
 }
-.running #player-body { animation: runBody 0.3s infinite; }
-@keyframes runBody {
- 0% { transform: translateX(-50%) translateY(0); }
- 50% { transform: translateX(-50%) translateY(-10px); }
+.running #player-model { animation: runPlayer 0.4s infinite; }
+@keyframes runPlayer {
+ 0% { transform: translateX(-50%) rotate(-3deg); }
+ 50% { transform: translateX(-50%) rotate(3deg); }
 }
 
-/* جديد: وضع افقي */
 @media screen and (orientation: landscape) {
 .btn { transform: scale(1.2); }
-  #player-body { width: 450px; height: 600px; }
+  #player-model { width: 250px; height: 450px; }
 }
 </style>
 <script type="importmap">{"imports":{"three":"https://unpkg.com/three@0.160.0/build/three.module.js"}}</script>
 </head>
 <body>
-<div id="info">متاهة Backrooms - هرب من الوحش!</div>
-<div id="warning">⚠️ الوحش قريب!! ⚠️</div>
+<div id="info">Backrooms Level 0 - هرب!</div>
+<div id="warning">⚠️ ENTITY قريب!! ⚠️</div>
 
-<!-- جديد: الشخصية كاملة -->
-<div id="player-body"></div>
+<div id="player-model"></div>
 
 <button class="btn" id="up">▲</button>
 <button class="btn" id="left">◀</button>
@@ -73,42 +69,67 @@ function playBeep(speed){
     try{
       const audio = new AudioContext();
       const osc = audio.createOscillator();
-      osc.frequency.value = 900;
+      osc.frequency.value = 400; // صوت اخفض و اخوف
       osc.connect(audio.destination);
-      osc.start(); osc.stop(audio.currentTime + 0.08);
+      osc.start(); osc.stop(audio.currentTime + 0.1);
     }catch(e){}
   }, speed);
 }
 function stopBeep(){ if(beepInterval) clearInterval(beepInterval); beepInterval = null; }
 
-function makeScaryTexture(text, isScary){
+function makeBackroomsTexture(isFirstWall){
   const canvas=document.createElement('canvas'); const ctx=canvas.getContext('2d');
   canvas.width=512; canvas.height=512;
-  ctx.fillStyle='#554400'; ctx.fillRect(0,0,512,512);
   
-  if(isScary){
-    // خربشات و دم
-    ctx.strokeStyle='#880000'; ctx.lineWidth=8;
-    for(let i=0;i<20;i++){
-      ctx.beginPath();
-      ctx.moveTo(Math.random()*512, Math.random()*512);
-      ctx.lineTo(Math.random()*512, Math.random()*512);
-      ctx.stroke();
-    }
-    // عيون مخيفة
-    ctx.fillStyle='#ff0000';
-    for(let i=0;i<5;i++){
-      ctx.beginPath();
-      ctx.arc(Math.random()*512, Math.random()*512, 15, 0, Math.PI*2);
-      ctx.fill();
-    }
-    ctx.fillStyle='#aa0000'; ctx.font='bold 40px Arial'; 
-    ctx.fillText('HELP ME', 150, 250);
-    ctx.fillText('RUN', 200, 300);
-  } else {
-    // الجدار الاول ديالك
-    ctx.fillStyle='#bb0000'; ctx.font='bold 50px Arial'; ctx.textAlign='center'; 
+  // لون Backrooms الاصفر الكلاسيكي
+  ctx.fillStyle='#d4c45a'; 
+  ctx.fillRect(0,0,512,512);
+  
+  // ورق الحائط بنقشة
+  ctx.strokeStyle='#b8a84a'; ctx.lineWidth=1;
+  for(let i=0;i<512;i+=32){
+    ctx.beginPath(); ctx.moveTo(i,0); ctx.lineTo(i,512); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(0,i); ctx.lineTo(512,i); ctx.stroke();
+  }
+  
+  if(isFirstWall){
+    ctx.fillStyle='#8b0000'; ctx.font='bold 40px Arial'; ctx.textAlign='center'; 
     ctx.fillText('Sohail alaoui 🍁',256,256);
+  } else {
+    // خربشات و كتابة مخيفة
+    ctx.strokeStyle='#660000'; ctx.lineWidth=4;
+    ctx.beginPath(); ctx.moveTo(50,100); ctx.lineTo(200,150); ctx.lineTo(100,300); ctx.stroke();
+    ctx.fillStyle='#550000'; ctx.font='bold 30px Arial'; 
+    ctx.fillText('GET OUT', 150, 400);
+    ctx.fillText('NO EXIT', 300, 200);
+  }
+  return new THREE.CanvasTexture(canvas);
+}
+
+function makeFloorTexture(){
+  const canvas=document.createElement('canvas'); const ctx=canvas.getContext('2d');
+  canvas.width=512; canvas.height=512;
+  ctx.fillStyle='#c4b45a'; ctx.fillRect(0,0,512,512);
+  // سجاد Backrooms
+  for(let i=0;i<512;i+=8){
+    ctx.fillStyle = i%16===0? '#b8a84a' : '#d4c45a';
+    ctx.fillRect(0,i,512,8);
+  }
+  return new THREE.CanvasTexture(canvas);
+}
+
+function makeCeilingTexture(){
+  const canvas=document.createElement('canvas'); const ctx=canvas.getContext('2d');
+  canvas.width=512; canvas.height=512;
+  ctx.fillStyle='#e0d86a'; ctx.fillRect(0,0,512,512);
+  // بلاط السقف + نيون
+  for(let i=0;i<512;i+=64){
+    ctx.strokeStyle='#999'; ctx.lineWidth=2;
+    ctx.strokeRect(i,0,64,64);
+    if(i%128===0) {
+      ctx.fillStyle='#ffffaa';
+      ctx.fillRect(i+8,8,48,48); // ضو النيون
+    }
   }
   return new THREE.CanvasTexture(canvas);
 }
@@ -119,33 +140,36 @@ function initGame(){
   gameOver=false;
   document.getElementById('restart').style.display='none';
   document.getElementById('warning').style.display='none';
-  document.getElementById('info').innerText='متاهة Backrooms - هرب من الوحش!';
+  document.getElementById('info').innerText='Backrooms Level 0 - هرب!';
 
   scene=new THREE.Scene();
-  scene.background=new THREE.Color(0x1a1400);
-  scene.fog=new THREE.Fog(0x1a1400,5,25); // ضباب اكثر رعب
+  scene.background=new THREE.Color(0xd4c45a);
+  scene.fog=new THREE.Fog(0xd4c45a,10,40);
 
   camera=new THREE.PerspectiveCamera(75,innerWidth/innerHeight,0.1,1000);
   renderer=new THREE.WebGLRenderer({antialias:true});
   renderer.setSize(innerWidth,innerHeight);
   document.body.appendChild(renderer.domElement);
 
-  // اضاءة مخيفة
-  scene.add(new THREE.AmbientLight(0x442200,0.5));
-  const light1=new THREE.PointLight(0xffaa00,3,30);light1.position.set(0,4,0);scene.add(light1);
-  const light2=new THREE.PointLight(0xffaa00,2,20);light2.position.set(15,4,25);scene.add(light2);
+  // اضاءة النيون ديال Backrooms
+  scene.add(new THREE.AmbientLight(0xffffcc,0.8));
+  const light1=new THREE.PointLight(0xffffdd,4,50);light1.position.set(0,4,0);scene.add(light1);
 
-  const floor=new THREE.Mesh(new THREE.PlaneGeometry(300,300),new THREE.MeshStandardMaterial({color:0x443300, roughness:0.9}));
+  const floorTex = makeFloorTexture();
+  const floor=new THREE.Mesh(new THREE.PlaneGeometry(300,300),new THREE.MeshStandardMaterial({map:floorTex}));
   floor.rotation.x=-Math.PI/2;scene.add(floor);
+
+  const ceilTex = makeCeilingTexture();
+  const ceiling=new THREE.Mesh(new THREE.PlaneGeometry(300,300),new THREE.MeshStandardMaterial({map:ceilTex, emissive:0xffffaa, emissiveIntensity:0.3}));
+  ceiling.rotation.x=Math.PI/2; ceiling.position.y=5; scene.add(ceiling);
 
   walls.length=0;
   function addWall(x,z,w,h, isFirst){
-    const tex = makeScaryTexture('',!isFirst);
+    const tex = makeBackroomsTexture(isFirst);
     const m=new THREE.Mesh(new THREE.BoxGeometry(w,5,h), new THREE.MeshStandardMaterial({map: tex}));
     m.position.set(x,2.5,z);scene.add(m);walls.push(m);
   }
 
-  // الجدار الاول فقط فيه اسمك
   addWall(0,-8,10,1, true); 
   addWall(-5,0,1,30, false); addWall(5,0,1,30, false);
   addWall(15,5,10,1, false); addWall(20,-5,1,20, false); addWall(20,15,1,20, false);
@@ -157,13 +181,14 @@ function initGame(){
   addWall(-15,35,10,1, false); addWall(-20,25,1,20, false); addWall(-20,45,1,20, false);
   addWall(0,55,10,1, false);
 
+  // الوحش ENTITY
   monster=new THREE.Mesh(
     new THREE.SphereGeometry(1.8,16,16),
-    new THREE.MeshStandardMaterial({color:0x000, emissive:0xff0000, emissiveIntensity:3})
+    new THREE.MeshStandardMaterial({color:0x111, emissive:0xff0000, emissiveIntensity:2})
   );
   monster.position.set(0,1,45);
   scene.add(monster);
-  const monsterLight = new THREE.PointLight(0xff0000,6,20); monster.add(monsterLight);
+  const monsterLight = new THREE.PointLight(0xff0000,5,15); monster.add(monsterLight);
 
   camera.position.set(0,1.7,2);
   yaw=0; pitch=0;
@@ -232,7 +257,7 @@ function animate(){
   }
 
   if(dist<2.3){
-    document.getElementById('info').innerText='الوحش مسك!!';
+    document.getElementById('info').innerText='ENTITY مسكك!!';
     document.getElementById('restart').style.display='block';
     warning.style.display='none';
     stopBeep();
