@@ -2,53 +2,51 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
-<title>Backrooms Level 0</title>
+<title>Backrooms Maghribi</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <style>
-body{margin:0;overflow:hidden;background:#000;touch-action:none;filter: contrast(1.1) brightness(0.9)}
-#info{position:absolute;top:10px;width:100%;text-align:center;color:#ffffaa;font-family:Arial;font-size:18px;font-weight:bold;text-shadow:0 0 5px #000}
+body{margin:0;overflow:hidden;background:#000;touch-action:none}
+#info{position:absolute;top:10px;width:100%;text-align:center;color:#ffd700;font-family:Arial;font-size:18px;font-weight:bold;text-shadow:0 0 5px #000}
 #warning{display:none;position:absolute;top:35%;width:100%;text-align:center;color:#ff0000;font-size:36px;font-family:Arial;font-weight:bold;text-shadow:0 0 15px #ff0000;animation:blink 0.2s infinite}
 @keyframes blink{50%{opacity:0}}
-.btn{position:absolute;bottom:40px;width:70px;height:70px;font-size:30px;background:rgba(255,255,0,0.15);border:2px solid #ffff00;border-radius:15px;color:white;touch-action:none;user-select:none}
-.btn:active{background:rgba(255,255,0,0.4)}
+.btn{position:absolute;bottom:40px;width:70px;height:70px;font-size:30px;background:rgba(139,69,19,0.4);border:2px solid #8b4513;border-radius:15px;color:white;touch-action:none;user-select:none}
+.btn:active{background:rgba(139,69,19,0.8)}
 #up{bottom:120px;left:15%}
 #down{bottom:40px;left:15%}
 #left{bottom:40px;left:calc(15% - 80px)}
 #right{bottom:40px;left:calc(15% + 80px)}
 #restart{display:none;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);padding:25px 50px;font-size:28px;background:#ff0000;color:#fff;border:3px solid #fff;border-radius:15px;z-index:10;cursor:pointer}
 
-/* الشخصية 3D من الجنب بحال الصورة */
-#player-model {
+/* الشخصية 3D بحال Free Fire */
+#player-3d {
   position: fixed;
   bottom: 0;
   left: 50%;
   transform: translateX(-50%);
-  width: 200px;
-  height: 400px;
-  background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 400"><rect x="80" y="50" width="40" height="40" fill="%23fdbcb4"/><rect x="70" y="90" width="60" height="80" fill="%23ffffff"/><rect x="75" y="170" width="20" height="100" fill="%23222"/><rect x="105" y="170" width="20" height="100" fill="%23222"/><rect x="60" y="95" width="15" height="60" fill="%23ffffff"/><rect x="125" y="95" width="15" height="60" fill="%23ffffff"/></svg>') no-repeat center;
-  background-size: contain;
+  width: 220px;
+  height: 450px;
   z-index: 999;
   pointer-events: none;
-  image-rendering: pixelated; /* ستايل بكسل بحال الصورة */
 }
-.running #player-model { animation: runPlayer 0.4s infinite; }
-@keyframes runPlayer {
- 0% { transform: translateX(-50%) rotate(-3deg); }
- 50% { transform: translateX(-50%) rotate(3deg); }
+.running #player-3d { animation: runFF 0.25s infinite; }
+@keyframes runFF {
+ 0% { transform: translateX(-50%) translateY(0) rotate(-2deg); }
+ 50% { transform: translateX(-50%) translateY(-12px) rotate(2deg); }
 }
 
 @media screen and (orientation: landscape) {
 .btn { transform: scale(1.2); }
-  #player-model { width: 250px; height: 450px; }
+  #player-3d { width: 280px; height: 500px; }
 }
 </style>
 <script type="importmap">{"imports":{"three":"https://unpkg.com/three@0.160.0/build/three.module.js"}}</script>
 </head>
 <body>
-<div id="info">Backrooms Level 0 - هرب!</div>
-<div id="warning">⚠️ ENTITY قريب!! ⚠️</div>
+<div id="info">Backrooms مغربي - هرب من الجن!</div>
+<div id="warning">⚠️ الجن قريب!! ⚠️</div>
 
-<div id="player-model"></div>
+<!-- الشخصية 3D -->
+<div id="player-3d"></div>
 
 <button class="btn" id="up">▲</button>
 <button class="btn" id="left">◀</button>
@@ -69,7 +67,7 @@ function playBeep(speed){
     try{
       const audio = new AudioContext();
       const osc = audio.createOscillator();
-      osc.frequency.value = 400; // صوت اخفض و اخوف
+      osc.frequency.value = 300;
       osc.connect(audio.destination);
       osc.start(); osc.stop(audio.currentTime + 0.1);
     }catch(e){}
@@ -77,61 +75,103 @@ function playBeep(speed){
 }
 function stopBeep(){ if(beepInterval) clearInterval(beepInterval); beepInterval = null; }
 
-function makeBackroomsTexture(isFirstWall){
-  const canvas=document.createElement('canvas'); const ctx=canvas.getContext('2d');
-  canvas.width=512; canvas.height=512;
-  
-  // لون Backrooms الاصفر الكلاسيكي
-  ctx.fillStyle='#d4c45a'; 
-  ctx.fillRect(0,0,512,512);
-  
-  // ورق الحائط بنقشة
-  ctx.strokeStyle='#b8a84a'; ctx.lineWidth=1;
-  for(let i=0;i<512;i+=32){
-    ctx.beginPath(); ctx.moveTo(i,0); ctx.lineTo(i,512); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(0,i); ctx.lineTo(512,i); ctx.stroke();
+function createPlayer3D(){
+  const container = document.getElementById('player-3d');
+  const scene3d = new THREE.Scene();
+  const camera3d = new THREE.PerspectiveCamera(50, 220/450, 0.1, 1000);
+  const renderer3d = new THREE.WebGLRenderer({alpha:true});
+  renderer3d.setSize(220, 450);
+  container.appendChild(renderer3d.domElement);
+
+  // راس دائري + جسم انسان
+  const head = new THREE.Mesh(new THREE.SphereGeometry(0.4,16,16), new THREE.MeshStandardMaterial({color:0xe0b48d}));
+  head.position.y = 1.6;
+  const body = new THREE.Mesh(new THREE.CapsuleGeometry(0.3,0.8), new THREE.MeshStandardMaterial({color:0x8b4513}));
+  body.position.y = 0.8;
+  const armL = new THREE.Mesh(new THREE.CapsuleGeometry(0.1,0.6), new THREE.MeshStandardMaterial({color:0xe0b48d}));
+  armL.position.set(-0.4,0.8,0);
+  const armR = armL.clone(); armR.position.x = 0.4;
+  const legL = new THREE.Mesh(new THREE.CapsuleGeometry(0.12,0.8), new THREE.MeshStandardMaterial({color:0x222}));
+  legL.position.set(-0.15,0,0);
+  const legR = legL.clone(); legR.position.x = 0.15;
+
+  const group = new THREE.Group();
+  group.add(head,body,armL,armR,legL,legR);
+  scene3d.add(group);
+  scene3d.add(new THREE.AmbientLight(0xffffff,1));
+  camera3d.position.z = 3;
+
+  function animatePlayer(){
+    requestAnimationFrame(animatePlayer);
+    if(document.body.classList.contains('running')){
+      group.rotation.z = Math.sin(Date.now()*0.01)*0.1; // حركة الجري
+    }
+    renderer3d.render(scene3d,camera3d);
   }
-  
-  if(isFirstWall){
-    ctx.fillStyle='#8b0000'; ctx.font='bold 40px Arial'; ctx.textAlign='center'; 
-    ctx.fillText('Sohail alaoui 🍁',256,256);
-  } else {
-    // خربشات و كتابة مخيفة
-    ctx.strokeStyle='#660000'; ctx.lineWidth=4;
-    ctx.beginPath(); ctx.moveTo(50,100); ctx.lineTo(200,150); ctx.lineTo(100,300); ctx.stroke();
-    ctx.fillStyle='#550000'; ctx.font='bold 30px Arial'; 
-    ctx.fillText('GET OUT', 150, 400);
-    ctx.fillText('NO EXIT', 300, 200);
-  }
-  return new THREE.CanvasTexture(canvas);
+  animatePlayer();
 }
 
-function makeFloorTexture(){
+function makeMaghribiTexture(isFirst){
   const canvas=document.createElement('canvas'); const ctx=canvas.getContext('2d');
   canvas.width=512; canvas.height=512;
-  ctx.fillStyle='#c4b45a'; ctx.fillRect(0,0,512,512);
-  // سجاد Backrooms
-  for(let i=0;i<512;i+=8){
-    ctx.fillStyle = i%16===0? '#b8a84a' : '#d4c45a';
-    ctx.fillRect(0,i,512,8);
-  }
-  return new THREE.CanvasTexture(canvas);
-}
 
-function makeCeilingTexture(){
-  const canvas=document.createElement('canvas'); const ctx=canvas.getContext('2d');
-  canvas.width=512; canvas.height=512;
-  ctx.fillStyle='#e0d86a'; ctx.fillRect(0,0,512,512);
-  // بلاط السقف + نيون
+  // زليج مغربي
+  ctx.fillStyle='#d4a76a'; ctx.fillRect(0,0,512,512);
   for(let i=0;i<512;i+=64){
-    ctx.strokeStyle='#999'; ctx.lineWidth=2;
-    ctx.strokeRect(i,0,64,64);
-    if(i%128===0) {
-      ctx.fillStyle='#ffffaa';
-      ctx.fillRect(i+8,8,48,48); // ضو النيون
+    for(let j=0;j<512;j+=64){
+      ctx.strokeStyle='#8b4513'; ctx.lineWidth=3;
+      ctx.strokeRect(i,j,64,64);
+      ctx.fillStyle='#c19a5a';
+      ctx.fillRect(i+8,j+8,48,48);
     }
   }
+
+  if(isFirst){
+    ctx.fillStyle='#8b0000'; ctx.font='bold 35px Arial'; ctx.textAlign='center';
+    ctx.fillText('Sohail alaoui 🍁',256,256);
+  } else {
+    // نقوش مغربية + كتابة مخيفة
+    ctx.fillStyle='#550000'; ctx.font='bold 25px Arial';
+    ctx.fillText('اخرج', 100, 100);
+    ctx.fillText('ماكاينش الخروج', 300, 400);
+  }
   return new THREE.CanvasTexture(canvas);
+}
+
+function makeZelligeFloor(){
+  const canvas=document.createElement('canvas'); const ctx=canvas.getContext('2d');
+  canvas.width=512; canvas.height=512;
+  ctx.fillStyle='#8b4513'; ctx.fillRect(0,0,512,512);
+  // زرابي مغربية
+  for(let i=0;i<512;i+=32){
+    ctx.fillStyle = i%64===0? '#d4a76a' : '#a0522d';
+    ctx.fillRect(0,i,512,16);
+  }
+  return new THREE.CanvasTexture(canvas);
+}
+
+function makeCeiling(){
+  const canvas=document.createElement('canvas'); const ctx=canvas.getContext('2d');
+  canvas.width=512; canvas.height=512;
+  ctx.fillStyle='#f5deb3'; ctx.fillRect(0,0,512,512);
+  // جبس مغربي
+  for(let i=0;i<512;i+=50){
+    ctx.strokeStyle='#daa520'; ctx.lineWidth=2;
+    ctx.beginPath(); ctx.arc(i, i, 30, 0, Math.PI*2); ctx.stroke();
+  }
+  return new THREE.CanvasTexture(canvas);
+}
+
+function addFurniture(x,z){
+  // طاولة مغربية
+  const table = new THREE.Mesh(new THREE.CylinderGeometry(1,1,0.3,8), new THREE.MeshStandardMaterial({color:0x8b4513}));
+  table.position.set(x,0.15,z); scene.add(table);
+  // مخاد
+  for(let i=0;i<4;i++){
+    const pillow = new THREE.Mesh(new THREE.BoxGeometry(0.6,0.2,0.6), new THREE.MeshStandardMaterial({color:0xcd853f}));
+    pillow.position.set(x+Math.cos(i*Math.PI/2)*1.5,0.1,z+Math.sin(i*Math.PI/2)*1.5);
+    scene.add(pillow);
+  }
 }
 
 function initGame(){
@@ -140,58 +180,56 @@ function initGame(){
   gameOver=false;
   document.getElementById('restart').style.display='none';
   document.getElementById('warning').style.display='none';
-  document.getElementById('info').innerText='Backrooms Level 0 - هرب!';
+  document.getElementById('info').innerText='Backrooms مغربي - هرب من الجن!';
 
   scene=new THREE.Scene();
-  scene.background=new THREE.Color(0xd4c45a);
-  scene.fog=new THREE.Fog(0xd4c45a,10,40);
+  scene.background=new THREE.Color(0xd4a76a);
+  scene.fog=new THREE.Fog(0xd4a76a,8,30);
 
   camera=new THREE.PerspectiveCamera(75,innerWidth/innerHeight,0.1,1000);
   renderer=new THREE.WebGLRenderer({antialias:true});
   renderer.setSize(innerWidth,innerHeight);
   document.body.appendChild(renderer.domElement);
 
-  // اضاءة النيون ديال Backrooms
-  scene.add(new THREE.AmbientLight(0xffffcc,0.8));
-  const light1=new THREE.PointLight(0xffffdd,4,50);light1.position.set(0,4,0);scene.add(light1);
+  scene.add(new THREE.AmbientLight(0xfff8dc,0.7));
+  const light1=new THREE.PointLight(0xffd700,4,40);light1.position.set(0,4,0);scene.add(light1);
 
-  const floorTex = makeFloorTexture();
+  const floorTex = makeZelligeFloor();
   const floor=new THREE.Mesh(new THREE.PlaneGeometry(300,300),new THREE.MeshStandardMaterial({map:floorTex}));
   floor.rotation.x=-Math.PI/2;scene.add(floor);
 
-  const ceilTex = makeCeilingTexture();
-  const ceiling=new THREE.Mesh(new THREE.PlaneGeometry(300,300),new THREE.MeshStandardMaterial({map:ceilTex, emissive:0xffffaa, emissiveIntensity:0.3}));
+  const ceilTex = makeCeiling();
+  const ceiling=new THREE.Mesh(new THREE.PlaneGeometry(300,300),new THREE.MeshStandardMaterial({map:ceilTex}));
   ceiling.rotation.x=Math.PI/2; ceiling.position.y=5; scene.add(ceiling);
 
   walls.length=0;
   function addWall(x,z,w,h, isFirst){
-    const tex = makeBackroomsTexture(isFirst);
+    const tex = makeMaghribiTexture(isFirst);
     const m=new THREE.Mesh(new THREE.BoxGeometry(w,5,h), new THREE.MeshStandardMaterial({map: tex}));
     m.position.set(x,2.5,z);scene.add(m);walls.push(m);
   }
 
-  addWall(0,-8,10,1, true); 
+  addWall(0,-8,10,1, true);
   addWall(-5,0,1,30, false); addWall(5,0,1,30, false);
-  addWall(15,5,10,1, false); addWall(20,-5,1,20, false); addWall(20,15,1,20, false);
-  addWall(10,15,10,1, false); addWall(10,-5,10,1, false);
-  addWall(-15,5,10,1, false); addWall(-20,-5,1,20, false); addWall(-20,15,1,20, false);
-  addWall(-10,15,10,1, false); addWall(-10,-5,10,1, false);
+  addWall(15,5,10,1, false); addWall(20,-5,1,20, false);
+  addWall(-15,5,10,1, false); addWall(-20,-5,1,20, false);
   addWall(0,20,10,1, false); addWall(-5,35,1,30, false); addWall(5,35,1,30, false);
-  addWall(15,35,10,1, false); addWall(20,25,1,20, false); addWall(20,45,1,20, false);
-  addWall(-15,35,10,1, false); addWall(-20,25,1,20, false); addWall(-20,45,1,20, false);
   addWall(0,55,10,1, false);
 
-  // الوحش ENTITY
+  // أثاث مغربي فالغرف
+  addFurniture(15,0); addFurniture(-15,10); addFurniture(0,30);
+
   monster=new THREE.Mesh(
     new THREE.SphereGeometry(1.8,16,16),
-    new THREE.MeshStandardMaterial({color:0x111, emissive:0xff0000, emissiveIntensity:2})
+    new THREE.MeshStandardMaterial({color:0x000, emissive:0xff0000, emissiveIntensity:3})
   );
   monster.position.set(0,1,45);
   scene.add(monster);
-  const monsterLight = new THREE.PointLight(0xff0000,5,15); monster.add(monsterLight);
+  const monsterLight = new THREE.PointLight(0xff0000,6,20); monster.add(monsterLight);
 
   camera.position.set(0,1.7,2);
   yaw=0; pitch=0;
+  createPlayer3D();
   animate();
 }
 
@@ -227,7 +265,7 @@ document.getElementById('restart').onclick=()=>{initGame()};
 function animate(){
   if(gameOver) return;
   requestAnimationFrame(animate);
-  const speed=0.14;
+  const speed=0.16; // سرعة بحال Free Fire
 
   const forward = new THREE.Vector3(0,0,-1).applyAxisAngle(new THREE.Vector3(0,1,0), yaw);
   const right = new THREE.Vector3(1,0,0).applyAxisAngle(new THREE.Vector3(0,1,0), yaw);
@@ -242,7 +280,7 @@ function animate(){
   if(!collision)camera.position.copy(newPos);
 
   const dir = camera.position.clone().sub(monster.position).normalize();
-  monster.position.addScaledVector(dir, 0.08);
+  monster.position.addScaledVector(dir, 0.09);
   monster.lookAt(camera.position);
 
   const dist = monster.position.distanceTo(camera.position);
@@ -250,14 +288,14 @@ function animate(){
 
   if(dist < 12){
     warning.style.display='block';
-    if(dist < 6) playBeep(200); else playBeep(600);
+    if(dist < 6) playBeep(180); else playBeep(500);
   } else {
     warning.style.display='none';
     stopBeep();
   }
 
   if(dist<2.3){
-    document.getElementById('info').innerText='ENTITY مسكك!!';
+    document.getElementById('info').innerText='الجن مسكك!!';
     document.getElementById('restart').style.display='block';
     warning.style.display='none';
     stopBeep();
