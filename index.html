@@ -2,57 +2,57 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
-<title>Backrooms Maghribi</title>
+<title>Backrooms Horror Realistic</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <style>
-body{margin:0;overflow:hidden;background:#000;touch-action:none}
-#info{position:absolute;top:10px;width:100%;text-align:center;color:#ffd700;font-family:Arial;font-size:18px;font-weight:bold;text-shadow:0 0 5px #000}
-#warning{display:none;position:absolute;top:35%;width:100%;text-align:center;color:#ff0000;font-size:36px;font-family:Arial;font-weight:bold;text-shadow:0 0 15px #ff0000;animation:blink 0.2s infinite}
+body{margin:0;overflow:hidden;background:#000;touch-action:none;filter:brightness(0.7) contrast(1.2)}
+#info{position:absolute;top:10px;width:100%;text-align:center;color:#ffcc00;font-family:Arial;font-size:18px;font-weight:bold;text-shadow:0 0 8px #000}
+#warning{display:none;position:absolute;top:35%;width:100%;text-align:center;color:#ff0000;font-size:40px;font-family:Arial;font-weight:bold;text-shadow:0 0 20px #ff0000;animation:blink 0.15s infinite}
 @keyframes blink{50%{opacity:0}}
-.btn{position:absolute;bottom:40px;width:70px;height:70px;font-size:30px;background:rgba(139,69,19,0.4);border:2px solid #8b4513;border-radius:15px;color:white;touch-action:none;user-select:none}
-.btn:active{background:rgba(139,69,19,0.8)}
-#up{bottom:120px;left:15%}
-#down{bottom:40px;left:15%}
-#left{bottom:40px;left:calc(15% - 80px)}
-#right{bottom:40px;left:calc(15% + 80px)}
-#restart{display:none;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);padding:25px 50px;font-size:28px;background:#ff0000;color:#fff;border:3px solid #fff;border-radius:15px;z-index:10;cursor:pointer}
+.btn{position:absolute;bottom:30px;width:75px;height:75px;font-size:32px;background:rgba(0,0,0,0.5);border:3px solid #444;border-radius:20px;color:#ccc;touch-action:none;user-select:none;box-shadow:0 0 15px rgba(0,0,0,0.8)}
+.btn:active{background:rgba(255,0,0,0.4);border-color:#ff0000}
+#up{bottom:120px;left:5%}
+#down{bottom:30px;left:5%}
+#left{bottom:30px;left:calc(5% + 85px)}
+#right{bottom:30px;left:calc(5% - 85px)}
+#restart{display:none;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);padding:30px 60px;font-size:30px;background:#8b0000;color:#fff;border:4px solid #fff;border-radius:20px;z-index:10;cursor:pointer;font-weight:bold}
 
-/* الشخصية 3D بحال Free Fire */
-#player-3d {
+/* شخصية واقعية FPS */
+#player-arms {
   position: fixed;
-  bottom: 0;
+  bottom: -20px;
   left: 50%;
   transform: translateX(-50%);
-  width: 220px;
-  height: 450px;
+  width: 100%;
+  height: 60%;
+  background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 600"><path d="M120 500 Q100 400 110 300 Q115 280 125 290 L140 320 Q150 300 160 280 Q170 270 180 290 Q200 310 210 500" fill="%23c19a6b" stroke="%238b6914" stroke-width="2"/><path d="M280 500 Q300 400 290 300 Q285 280 275 290 L260 320 Q250 300 240 280 Q230 270 220 290 Q200 310 190 500" fill="%23c19a6b" stroke="%238b6914" stroke-width="2"/><rect x="130" y="280" width="40" height="80" fill="%23222"/><rect x="230" y="280" width="40" height="80" fill="%23222"/></svg>') no-repeat center bottom;
+  background-size: contain;
   z-index: 999;
   pointer-events: none;
+  opacity: 0.9;
 }
-.running #player-3d { animation: runFF 0.25s infinite; }
-@keyframes runFF {
- 0% { transform: translateX(-50%) translateY(0) rotate(-2deg); }
- 50% { transform: translateX(-50%) translateY(-12px) rotate(2deg); }
+.running #player-arms { animation: bob 0.2s infinite; }
+@keyframes bob {
+ 0% { transform: translateX(-50%) translateY(0); }
+ 50% { transform: translateX(-50%) translateY(-5px); }
 }
 
 @media screen and (orientation: landscape) {
-.btn { transform: scale(1.2); }
-  #player-3d { width: 280px; height: 500px; }
+.btn { transform: scale(1.3); }
 }
 </style>
 <script type="importmap">{"imports":{"three":"https://unpkg.com/three@0.160.0/build/three.module.js"}}</script>
 </head>
 <body>
-<div id="info">Backrooms مغربي - هرب من الجن!</div>
-<div id="warning">⚠️ الجن قريب!! ⚠️</div>
-
-<!-- الشخصية 3D -->
-<div id="player-3d"></div>
+<div id="info">Level 0 - لا تصدر صوتا</div>
+<div id="warning">⚠️ إنه خلفك!! ⚠️</div>
+<div id="player-arms"></div>
 
 <button class="btn" id="up">▲</button>
 <button class="btn" id="left">◀</button>
 <button class="btn" id="down">▼</button>
 <button class="btn" id="right">▶</button>
-<button id="restart">🔄 إعادة التشغيل</button>
+<button id="restart">🔄 إعادة المحاولة</button>
 
 <script type="module">
 import * as THREE from 'three';
@@ -65,171 +65,101 @@ function playBeep(speed){
   if(beepInterval) clearInterval(beepInterval);
   beepInterval = setInterval(()=>{
     try{
-      const audio = new AudioContext();
-      const osc = audio.createOscillator();
-      osc.frequency.value = 300;
-      osc.connect(audio.destination);
-      osc.start(); osc.stop(audio.currentTime + 0.1);
+      const ctx = new AudioContext();
+      const osc = ctx.createOscillator();
+      osc.frequency.value = 80;
+      osc.connect(ctx.destination);
+      osc.start(); osc.stop(ctx.currentTime + 0.2);
     }catch(e){}
   }, speed);
 }
 function stopBeep(){ if(beepInterval) clearInterval(beepInterval); beepInterval = null; }
 
-function createPlayer3D(){
-  const container = document.getElementById('player-3d');
-  const scene3d = new THREE.Scene();
-  const camera3d = new THREE.PerspectiveCamera(50, 220/450, 0.1, 1000);
-  const renderer3d = new THREE.WebGLRenderer({alpha:true});
-  renderer3d.setSize(220, 450);
-  container.appendChild(renderer3d.domElement);
-
-  // راس دائري + جسم انسان
-  const head = new THREE.Mesh(new THREE.SphereGeometry(0.4,16,16), new THREE.MeshStandardMaterial({color:0xe0b48d}));
-  head.position.y = 1.6;
-  const body = new THREE.Mesh(new THREE.CapsuleGeometry(0.3,0.8), new THREE.MeshStandardMaterial({color:0x8b4513}));
-  body.position.y = 0.8;
-  const armL = new THREE.Mesh(new THREE.CapsuleGeometry(0.1,0.6), new THREE.MeshStandardMaterial({color:0xe0b48d}));
-  armL.position.set(-0.4,0.8,0);
-  const armR = armL.clone(); armR.position.x = 0.4;
-  const legL = new THREE.Mesh(new THREE.CapsuleGeometry(0.12,0.8), new THREE.MeshStandardMaterial({color:0x222}));
-  legL.position.set(-0.15,0,0);
-  const legR = legL.clone(); legR.position.x = 0.15;
-
-  const group = new THREE.Group();
-  group.add(head,body,armL,armR,legL,legR);
-  scene3d.add(group);
-  scene3d.add(new THREE.AmbientLight(0xffffff,1));
-  camera3d.position.z = 3;
-
-  function animatePlayer(){
-    requestAnimationFrame(animatePlayer);
-    if(document.body.classList.contains('running')){
-      group.rotation.z = Math.sin(Date.now()*0.01)*0.1; // حركة الجري
-    }
-    renderer3d.render(scene3d,camera3d);
-  }
-  animatePlayer();
-}
-
-function makeMaghribiTexture(isFirst){
+function makeWallTexture(isScary){
   const canvas=document.createElement('canvas'); const ctx=canvas.getContext('2d');
   canvas.width=512; canvas.height=512;
+  ctx.fillStyle='#e8e0b8'; ctx.fillRect(0,0,512,512);
 
-  // زليج مغربي
-  ctx.fillStyle='#d4a76a'; ctx.fillRect(0,0,512,512);
-  for(let i=0;i<512;i+=64){
-    for(let j=0;j<512;j+=64){
-      ctx.strokeStyle='#8b4513'; ctx.lineWidth=3;
-      ctx.strokeRect(i,j,64,64);
-      ctx.fillStyle='#c19a5a';
-      ctx.fillRect(i+8,j+8,48,48);
-    }
-  }
+  // ورق حائط متسخ
+  ctx.strokeStyle='#c8c098'; ctx.lineWidth=1;
+  for(let i=0;i<512;i+=32){ctx.beginPath();ctx.moveTo(i,0);ctx.lineTo(i,512);ctx.stroke();ctx.beginPath();ctx.moveTo(0,i);ctx.lineTo(512,i);ctx.stroke();}
 
-  if(isFirst){
-    ctx.fillStyle='#8b0000'; ctx.font='bold 35px Arial'; ctx.textAlign='center';
-    ctx.fillText('Sohail alaoui 🍁',256,256);
+  if(isScary){
+    ctx.fillStyle='#4a0000'; ctx.font='bold 20px Arial';
+    ctx.fillText('RUN', 50, 50); ctx.fillText('HELP', 400, 400);
+    // بقع دم
+    ctx.fillStyle='rgba(139,0,0,0.6)';
+    for(let i=0;i<10;i++) ctx.beginPath(),ctx.arc(Math.random()*512,Math.random()*512,Math.random()*20,0,6.28),ctx.fill();
   } else {
-    // نقوش مغربية + كتابة مخيفة
-    ctx.fillStyle='#550000'; ctx.font='bold 25px Arial';
-    ctx.fillText('اخرج', 100, 100);
-    ctx.fillText('ماكاينش الخروج', 300, 400);
+    ctx.fillStyle='#8b0000'; ctx.font='bold 40px Arial'; ctx.textAlign='center';
+    ctx.fillText('Sohail alaoui 🍁',256,256);
   }
   return new THREE.CanvasTexture(canvas);
-}
-
-function makeZelligeFloor(){
-  const canvas=document.createElement('canvas'); const ctx=canvas.getContext('2d');
-  canvas.width=512; canvas.height=512;
-  ctx.fillStyle='#8b4513'; ctx.fillRect(0,0,512,512);
-  // زرابي مغربية
-  for(let i=0;i<512;i+=32){
-    ctx.fillStyle = i%64===0? '#d4a76a' : '#a0522d';
-    ctx.fillRect(0,i,512,16);
-  }
-  return new THREE.CanvasTexture(canvas);
-}
-
-function makeCeiling(){
-  const canvas=document.createElement('canvas'); const ctx=canvas.getContext('2d');
-  canvas.width=512; canvas.height=512;
-  ctx.fillStyle='#f5deb3'; ctx.fillRect(0,0,512,512);
-  // جبس مغربي
-  for(let i=0;i<512;i+=50){
-    ctx.strokeStyle='#daa520'; ctx.lineWidth=2;
-    ctx.beginPath(); ctx.arc(i, i, 30, 0, Math.PI*2); ctx.stroke();
-  }
-  return new THREE.CanvasTexture(canvas);
-}
-
-function addFurniture(x,z){
-  // طاولة مغربية
-  const table = new THREE.Mesh(new THREE.CylinderGeometry(1,1,0.3,8), new THREE.MeshStandardMaterial({color:0x8b4513}));
-  table.position.set(x,0.15,z); scene.add(table);
-  // مخاد
-  for(let i=0;i<4;i++){
-    const pillow = new THREE.Mesh(new THREE.BoxGeometry(0.6,0.2,0.6), new THREE.MeshStandardMaterial({color:0xcd853f}));
-    pillow.position.set(x+Math.cos(i*Math.PI/2)*1.5,0.1,z+Math.sin(i*Math.PI/2)*1.5);
-    scene.add(pillow);
-  }
 }
 
 function initGame(){
   document.body.querySelectorAll('canvas').forEach(c=>c.remove());
-  stopBeep();
-  gameOver=false;
+  stopBeep(); gameOver=false;
   document.getElementById('restart').style.display='none';
   document.getElementById('warning').style.display='none';
-  document.getElementById('info').innerText='Backrooms مغربي - هرب من الجن!';
 
   scene=new THREE.Scene();
-  scene.background=new THREE.Color(0xd4a76a);
-  scene.fog=new THREE.Fog(0xd4a76a,8,30);
+  scene.background=new THREE.Color(0x2a2a1a);
+  scene.fog=new THREE.Fog(0x2a2a1a,3,20); // ضباب كثيف
 
-  camera=new THREE.PerspectiveCamera(75,innerWidth/innerHeight,0.1,1000);
+  camera=new THREE.PerspectiveCamera(80,innerWidth/innerHeight,0.1,1000);
   renderer=new THREE.WebGLRenderer({antialias:true});
   renderer.setSize(innerWidth,innerHeight);
   document.body.appendChild(renderer.domElement);
 
-  scene.add(new THREE.AmbientLight(0xfff8dc,0.7));
-  const light1=new THREE.PointLight(0xffd700,4,40);light1.position.set(0,4,0);scene.add(light1);
+  // إضاءة ضعيفة و مرعبة
+  scene.add(new THREE.AmbientLight(0x333300,0.3));
+  const flickerLight = new THREE.PointLight(0xffffaa,2,15); flickerLight.position.set(0,4,0); scene.add(flickerLight);
+  setInterval(()=>{flickerLight.intensity = 1.5 + Math.random()*1.5}, 200); // ضو كيرمش
 
-  const floorTex = makeZelligeFloor();
-  const floor=new THREE.Mesh(new THREE.PlaneGeometry(300,300),new THREE.MeshStandardMaterial({map:floorTex}));
+  const floor=new THREE.Mesh(new THREE.PlaneGeometry(200,200),new THREE.MeshStandardMaterial({color:0x8b7d5b, roughness:0.8}));
   floor.rotation.x=-Math.PI/2;scene.add(floor);
 
-  const ceilTex = makeCeiling();
-  const ceiling=new THREE.Mesh(new THREE.PlaneGeometry(300,300),new THREE.MeshStandardMaterial({map:ceilTex}));
-  ceiling.rotation.x=Math.PI/2; ceiling.position.y=5; scene.add(ceiling);
+  const ceiling=new THREE.Mesh(new THREE.PlaneGeometry(200,200),new THREE.MeshStandardMaterial({color:0xaaa980, emissive:0xffffcc, emissiveIntensity:0.1}));
+  ceiling.rotation.x=Math.PI/2; ceiling.position.y=3.5; scene.add(ceiling);
 
   walls.length=0;
-  function addWall(x,z,w,h, isFirst){
-    const tex = makeMaghribiTexture(isFirst);
-    const m=new THREE.Mesh(new THREE.BoxGeometry(w,5,h), new THREE.MeshStandardMaterial({map: tex}));
-    m.position.set(x,2.5,z);scene.add(m);walls.push(m);
+  function addWall(x,z,w,h, scary=false){
+    const tex = makeWallTexture(scary);
+    const m=new THREE.Mesh(new THREE.BoxGeometry(w,3.5,h), new THREE.MeshStandardMaterial({map: tex}));
+    m.position.set(x,1.75,z);scene.add(m);walls.push(m);
   }
 
-  addWall(0,-8,10,1, true);
-  addWall(-5,0,1,30, false); addWall(5,0,1,30, false);
-  addWall(15,5,10,1, false); addWall(20,-5,1,20, false);
-  addWall(-15,5,10,1, false); addWall(-20,-5,1,20, false);
-  addWall(0,20,10,1, false); addWall(-5,35,1,30, false); addWall(5,35,1,30, false);
-  addWall(0,55,10,1, false);
+  // **متاهة + غرف + أروقة ديقة**
+  // الممر الرئيسي الديق
+  addWall(0,-5,2,1); addWall(-2,0,1,20); addWall(2,0,1,20);
 
-  // أثاث مغربي فالغرف
-  addFurniture(15,0); addFurniture(-15,10); addFurniture(0,30);
+  // غرفة 1 - فيها اسمك
+  addWall(-8,5,8,1); addWall(-12,10,1,10); addWall(-8,15,8,1); addWall(-4,10,1,10, true);
 
+  // ممر ديق
+  addWall(0,15,2,1); addWall(-2,20,1,10); addWall(2,20,1,10);
+
+  // غرفة 2 - خاوية ومخيفة
+  addWall(8,25,8,1, true); addWall(12,30,1,10, true); addWall(8,35,8,1, true); addWall(4,30,1,10, true);
+
+  // ممر طويل
+  addWall(0,35,2,1); addWall(-2,45,1,20); addWall(2,45,1,20);
+
+  // النهاية
+  addWall(0,55,2,1, true);
+
+  // الوحش
   monster=new THREE.Mesh(
-    new THREE.SphereGeometry(1.8,16,16),
-    new THREE.MeshStandardMaterial({color:0x000, emissive:0xff0000, emissiveIntensity:3})
+    new THREE.SphereGeometry(0.8,16,16),
+    new THREE.MeshStandardMaterial({color:0x110000, emissive:0xff0000, emissiveIntensity:4})
   );
-  monster.position.set(0,1,45);
+  monster.position.set(0,0.8,50);
   scene.add(monster);
-  const monsterLight = new THREE.PointLight(0xff0000,6,20); monster.add(monsterLight);
+  const monsterLight = new THREE.PointLight(0xff0000,4,12); monster.add(monsterLight);
 
-  camera.position.set(0,1.7,2);
+  camera.position.set(0,1.6,0);
   yaw=0; pitch=0;
-  createPlayer3D();
   animate();
 }
 
@@ -253,8 +183,8 @@ document.addEventListener('touchstart',e=>{
 document.addEventListener('touchmove',e=>{
   if(isDragging){
     const dx=e.touches[0].clientX-lastX; const dy=e.touches[0].clientY-lastY;
-    yaw -= dx*0.012; pitch -= dy*0.012;
-    pitch = Math.max(-1.5, Math.min(1.5, pitch));
+    yaw -= dx*0.008; pitch -= dy*0.008; // حساسية اقل = واقعية اكثر
+    pitch = Math.max(-1.2, Math.min(1.2, pitch));
     lastX=e.touches[0].clientX; lastY=e.touches[0].clientY;
   }
 });
@@ -265,7 +195,7 @@ document.getElementById('restart').onclick=()=>{initGame()};
 function animate(){
   if(gameOver) return;
   requestAnimationFrame(animate);
-  const speed=0.16; // سرعة بحال Free Fire
+  const speed=0.1; // سرعة واقعية
 
   const forward = new THREE.Vector3(0,0,-1).applyAxisAngle(new THREE.Vector3(0,1,0), yaw);
   const right = new THREE.Vector3(1,0,0).applyAxisAngle(new THREE.Vector3(0,1,0), yaw);
@@ -279,23 +209,26 @@ function animate(){
   walls.forEach(w=>{if(new THREE.Box3().setFromObject(w).containsPoint(newPos))collision=true;});
   if(!collision)camera.position.copy(newPos);
 
+  // حركة اهتزاز منين كتجري
+  if(move.u||move.d||move.l||move.r) camera.position.y = 1.6 + Math.sin(Date.now()*0.02)*0.03;
+
   const dir = camera.position.clone().sub(monster.position).normalize();
-  monster.position.addScaledVector(dir, 0.09);
+  monster.position.addScaledVector(dir, 0.07);
   monster.lookAt(camera.position);
 
   const dist = monster.position.distanceTo(camera.position);
   const warning = document.getElementById('warning');
 
-  if(dist < 12){
+  if(dist < 10){
     warning.style.display='block';
-    if(dist < 6) playBeep(180); else playBeep(500);
+    if(dist < 5) playBeep(150); else playBeep(400);
   } else {
     warning.style.display='none';
     stopBeep();
   }
 
-  if(dist<2.3){
-    document.getElementById('info').innerText='الجن مسكك!!';
+  if(dist<2){
+    document.getElementById('info').innerText='تم القبض عليك!!';
     document.getElementById('restart').style.display='block';
     warning.style.display='none';
     stopBeep();
